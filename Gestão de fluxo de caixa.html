@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestão de Fluxo de Caixa e Salários</title>
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+    }
+    .section {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    form input, form select, form button {
+      padding: 8px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    .btn {
+      cursor: pointer;
+    }
+    .paid {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gestão de Fluxo de Caixa e Pagamento de Salários</h1>
+    
+    <!-- Seção de Fluxo de Caixa -->
+    <div id="cashflow" class="section">
+      <h2>Fluxo de Caixa</h2>
+      <form id="transactionForm">
+        <input type="text" id="transDescription" placeholder="Descrição" required>
+        <input type="number" id="transValue" placeholder="Valor" required step="0.01">
+        <select id="transType">
+          <option value="entrada">Entrada</option>
+          <option value="saida">Saída</option>
+        </select>
+        <button type="submit" class="btn">Adicionar Transação</button>
+      </form>
+      
+      <table id="transactionsTable">
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Transações serão listadas aqui -->
+        </tbody>
+      </table>
+      
+      <div id="cashSummary" style="margin-top: 20px;">
+        <p>Total Entradas: <span id="totalEntradas">Kz 0,00</span></p>
+        <p>Total Saídas: <span id="totalSaidas">Kz 0,00</span></p>
+        <p><strong>Lucro: <span id="totalLucro">Kz 0,00</span></strong></p>
+      </div>
+    </div>
+    
+    <!-- Seção de Pagamento de Salários -->
+    <div id="payroll" class="section">
+      <h2>Pagamento de Salários</h2>
+      <form id="employeeForm">
+        <input type="text" id="empName" placeholder="Nome do Funcionário" required>
+        <input type="number" id="empSalary" placeholder="Salário" required step="0.01">
+        <button type="submit" class="btn">Adicionar Funcionário</button>
+      </form>
+      
+      <table id="employeesTable">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Salário</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Funcionários serão listados aqui -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <script>
+    // Arrays para armazenar os dados
+    let transactions = [];
+    let employees = [];
+    const maxEmployees = 15;
+    
+    // Função para formatar números com espaços entre as milésimas e 2 casas decimais
+    function formatCurrency(value) {
+      let parts = Number(value).toFixed(2).split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+      return "Kz " + parts.join(',');
+    }
+    
+    // Atualiza a tabela de transações e os resumos
+    function updateTransactions() {
+      const tbody = document.querySelector("#transactionsTable tbody");
+      tbody.innerHTML = "";
+      let totalEntradas = 0;
+      let totalSaidas = 0;
+      
+      transactions.forEach(function(trans) {
+        const tr = document.createElement("tr");
+        const tdDesc = document.createElement("td");
+        tdDesc.textContent = trans.description;
+        const tdType = document.createElement("td");
+        tdType.textContent = trans.type === "entrada" ? "Entrada" : "Saída";
+        const tdValue = document.createElement("td");
+        tdValue.textContent = formatCurrency(trans.value);
+        tr.appendChild(tdDesc);
+        tr.appendChild(tdType);
+        tr.appendChild(tdValue);
+        tbody.appendChild(tr);
+        
+        if (trans.type === "entrada") {
+          totalEntradas += trans.value;
+        } else {
+          totalSaidas += trans.value;
+        }
+      });
+      
+      document.getElementById("totalEntradas").textContent = formatCurrency(totalEntradas);
+      document.getElementById("totalSaidas").textContent = formatCurrency(totalSaidas);
+      document.getElementById("totalLucro").textContent = formatCurrency(totalEntradas - totalSaidas);
+    }
+    
+    // Atualiza a tabela de funcionários
+    function updateEmployees() {
+      const tbody = document.querySelector("#employeesTable tbody");
+      tbody.innerHTML = "";
+      employees.forEach(function(emp, index) {
+        const tr = document.createElement("tr");
+        const tdName = document.createElement("td");
+        tdName.textContent = emp.name;
+        const tdSalary = document.createElement("td");
+        tdSalary.textContent = formatCurrency(emp.salary);
+        const tdAction = document.createElement("td");
+        
+        if (emp.paid) {
+          tdAction.innerHTML = "<span class='paid'>Pago</span>";
+        } else {
+          const payButton = document.createElement("button");
+          payButton.textContent = "Pagar";
+          payButton.classList.add("btn");
+          payButton.onclick = function() {
+            payEmployee(index);
+          };
+          tdAction.appendChild(payButton);
+        }
+        
+        tr.appendChild(tdName);
+        tr.appendChild(tdSalary);
+        tr.appendChild(tdAction);
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // Função para efetuar o pagamento do salário
+    function payEmployee(index) {
+      if (!employees[index].paid) {
+        // Registrar a transação de saída correspondente ao pagamento
+        transactions.push({
+          description: "Pagamento de Salário: " + employees[index].name,
+          type: "saida",
+          value: employees[index].salary
+        });
+        employees[index].paid = true;
+        updateTransactions();
+        updateEmployees();
+      }
+    }
+    
+    // Handler para adicionar transação
+    document.getElementById("transactionForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const description = document.getElementById("transDescription").value;
+      const value = parseFloat(document.getElementById("transValue").value);
+      const type = document.getElementById("transType").value;
+      
+      if (description && !isNaN(value)) {
+        transactions.push({ description, value, type });
+        updateTransactions();
+        // Limpar os campos do formulário
+        document.getElementById("transDescription").value = "";
+        document.getElementById("transValue").value = "";
+      }
+    });
+    
+    // Handler para adicionar funcionário
+    document.getElementById("employeeForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      if (employees.length >= maxEmployees) {
+        alert("Número máximo de funcionários (15) atingido.");
+        return;
+      }
+      const name = document.getElementById("empName").value;
+      const salary = parseFloat(document.getElementById("empSalary").value);
+      
+      if (name && !isNaN(salary)) {
+        employees.push({ name, salary, paid: false });
+        updateEmployees();
+        // Limpar os campos do formulário
+        document.getElementById("empName").value = "";
+        document.getElementById("empSalary").value = "";
+      }
+    });
+  </script>
+</body>
+</html>
